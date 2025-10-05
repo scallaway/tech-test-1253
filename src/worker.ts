@@ -1,5 +1,9 @@
 import { evaluate } from "mathjs";
 
+// math.js actually supports a lot more operations than this, but for the
+// purposes of the tech test this is a sufficient subset
+const EXPRESSION_REGEX = /(\*)+|(\+)+|(-)+/g;
+
 export type WorkerRequest = {
 	readonly columnId: number;
 	readonly rowIndex: number;
@@ -19,11 +23,21 @@ self.onmessage = ({ data }: MessageEvent<WorkerRequest>) => {
 		rowIndex: data.rowIndex,
 	};
 
-	// All spreadsheet formulae should start with an "="
 	if (!data.formula.startsWith("=")) {
-		self.postMessage({
+		const expressionMatches = [...data.formula.matchAll(EXPRESSION_REGEX)];
+
+		// If a formula is passed, but doesn't start with an equals sign, then
+		// ignore it and return the current value
+		if (expressionMatches.length) {
+			return self.postMessage({
+				...base,
+				result: data.oldValue,
+			});
+		}
+
+		return self.postMessage({
 			...base,
-			result: data.oldValue,
+			result: data.formula,
 		});
 	}
 

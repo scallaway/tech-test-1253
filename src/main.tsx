@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import {
+	CellApiModule,
 	ClientSideRowModelModule,
 	ColumnAutoSizeModule,
 	ModuleRegistry,
@@ -12,6 +13,7 @@ import {
 import App from "./App.tsx";
 
 ModuleRegistry.registerModules([
+	CellApiModule,
 	ColumnAutoSizeModule,
 	ClientSideRowModelModule,
 	RowApiModule,
