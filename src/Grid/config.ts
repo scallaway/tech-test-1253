@@ -1,7 +1,12 @@
-import { themeQuartz, type ColDef } from "ag-grid-community";
+import {
+	themeQuartz,
+	type ColDef,
+	type NestedFieldPaths,
+} from "ag-grid-community";
 import type { AgGridReact } from "ag-grid-react";
 import { type ComponentProps } from "react";
 import { CellEditor } from "./CellEditor";
+import type { Cell } from "../utils";
 
 export const DEFAULT_COLUMN_DEF = {
 	width: 100,
@@ -24,8 +29,7 @@ export const COLUMNS = [
 		},
 		cellDataType: "object",
 	})),
-]; // I think the types for columnDefs are slightly wrong (even the setup
-// tutorial didn't compile properly)
+];
 
 export const DATA_TYPE_DEFINITIONS = {
 	object: {
@@ -36,7 +40,7 @@ export const DATA_TYPE_DEFINITIONS = {
 } satisfies ComponentProps<typeof AgGridReact>["dataTypeDefinitions"];
 
 export const THEME = themeQuartz.withParams({
-	borderColor: "#000",
 	headerColumnBorder: { style: "solid" },
+	fontFamily: "monospace",
 	columnBorder: { style: "solid" },
 });

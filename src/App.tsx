@@ -1,51 +1,14 @@
-import invariant from "tiny-invariant";
-import { memo, useCallback, useEffect, useRef, type RefObject } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { produce } from "immer";
 import { AgGridReact } from "ag-grid-react";
-import {
-	COLUMNS,
-	DATA_TYPE_DEFINITIONS,
-	DEFAULT_COLUMN_DEF,
-	THEME,
-} from "./gridOptions";
-import { type Row } from "./types";
-import { type CellEditRequestEvent, type IRowNode } from "ag-grid-community";
+import { type Row } from "./utils";
+import { type IRowNode } from "ag-grid-community";
 import type { WorkerResponse } from "./worker";
-
-const ROW_DATA = Array.from({ length: 10 }).map((_, rowIndex) =>
-	Object.fromEntries(
-		COLUMNS.map((column, columnIndex) => [
-			[column.field],
-			{ formula: "", result: columnIndex === 0 ? rowIndex + 1 : null },
-		]),
-	),
-);
+import { Grid } from "./Grid";
 
 const App = memo(function App() {
 	const gridRef = useRef<AgGridReact | null>(null);
 	const worker = useRef<Worker | null>(null);
-
-	const handleCellEdit = useCallback(
-		(event: CellEditRequestEvent) => {
-			if (!event.newValue.formula || !gridRef.current) {
-				return;
-			}
-
-			// TODO: Type these worker messages all the way through as there are no
-			// compile-time guarantees at the moment
-			worker.current?.postMessage({
-				formula: event.newValue.formula,
-				cellValueMapping: retrieveCellValues(
-					event.newValue.formula,
-					gridRef.current,
-				),
-				oldValue: event.oldValue.result,
-				rowIndex: event.rowIndex,
-				columnId: event.column.getColId(),
-			});
-		},
-		[worker],
-	);
 
 	const publishResultToCell = useCallback((response: WorkerResponse) => {
 		// We're trying to update the grid before it's even ready
@@ -85,53 +48,13 @@ const App = memo(function App() {
 	}, [publishResultToCell, worker]);
 
 	return (
-		<div style={{ height: 475, width: 700, overflow: "scroll" }}>
-			<AgGridReact
-				ref={gridRef}
-				defaultColDef={DEFAULT_COLUMN_DEF}
-				rowData={ROW_DATA}
-				columnDefs={COLUMNS}
-				theme={THEME}
-				gridOptions={{ readOnlyEdit: true }}
-				onCellEditRequest={handleCellEdit}
-				dataTypeDefinitions={DATA_TYPE_DEFINITIONS}
-			/>
+		<div
+			style={{ height: 475, width: 700, overflow: "scroll" }}
+			data-ag-theme-mode="dark"
+		>
+			<Grid gridRef={gridRef} worker={worker} />
 		</div>
 	);
 });
 
 export default App;
-
-const CELL_MATCH_REGEX = /([A-Za-z]+[0-9]+)/g;
-
-/**
- * Returns a mapping of the cell references to the value of those cells
- */
-const retrieveCellValues = (
-	formula: string,
-	gridRef: RefObject<AgGridReact>["current"],
-): Map<string, number> => {
-	const cells = [...formula.matchAll(CELL_MATCH_REGEX)].map(
-		(match) => match.at(0)!,
-	);
-
-	return new Map(
-		cells.map((cell) => {
-			const rowNode = gridRef.api.getRowNode(
-				(Number(cell.slice(1)) - 1).toString(),
-			);
-			invariant(
-				rowNode,
-				`No row found for index: ${Number(cell.slice(1)) - 1}`,
-			);
-
-			return [
-				cell,
-				gridRef.api.getCellValue({
-					rowNode,
-					colKey: cell.slice(0, 1),
-				}).result ?? 0,
-			];
-		}),
-	);
-};

@@ -48,7 +48,6 @@ self.onmessage = ({ data }: MessageEvent<WorkerRequest>) => {
 		replaceCellValues(data.formula.slice(1), data.cellValueMapping),
 	);
 
-	// TODO: Handle text values
 	self.postMessage({
 		...base,
 		result,

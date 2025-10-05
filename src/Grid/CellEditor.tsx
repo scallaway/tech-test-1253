@@ -1,6 +1,6 @@
 import type { CustomCellEditorProps } from "ag-grid-react";
 import { memo, type FC } from "react";
-import { type Cell } from "./types";
+import { type Cell } from "../utils";
 
 export const CellEditor: FC<CustomCellEditorProps<Cell>> = memo((props) => {
 	return (
@@ -14,7 +14,9 @@ export const CellEditor: FC<CustomCellEditorProps<Cell>> = memo((props) => {
 				height: "100%",
 				width: "100%",
 				padding: 0,
+				paddingLeft: "1em",
 				margin: 0,
+				marginTop: "-2px",
 			}}
 			autoFocus
 		/>
