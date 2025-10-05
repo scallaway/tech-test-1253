@@ -7,8 +7,12 @@ really make much difference for a project of this size.
 
 ## How to run
 
-### Prerequisite If you don't already have bun, please install it locally as
-outlined [here](bun.sh)
+### Prerequisite
+
+If you don't already have bun, please install it locally as outlined
+[here](bun.sh)
+
+### Running instructions
 
 1. Clone the repo
 2. Run `bun install`
