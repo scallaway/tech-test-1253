@@ -1,75 +1,91 @@
-# React + TypeScript + Vite
+# Tech Test 1253
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Implemented with React + Typescript, Vite and bun.
 
-Currently, two official plugins are available:
+I've also included React Compiler in the name of performance, but it doesn't
+really make much difference for a project of this size.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How to run
 
-## React Compiler
+### Prerequisite If you don't already have bun, please install it locally as
+outlined [here](bun.sh)
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+1. Clone the repo
+2. Run `bun install`
+3. Run `bun run dev`
+4. Navigate to [localhost:5173](http://localhost:5173/)
 
-Note: This will impact Vite dev & build performances.
+## Covered vs. not covered
 
-## Expanding the ESLint configuration
+As was expected, I didn't get around to doing everything in the list. I
+attribute that mainly to my inexperience with AgGrid and Workers, requiring
+some additional time to brush up on that knowledge (I front-loaded that as much
+as possible).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+My priorities were defined as follows:
+1. Render a basic spreadsheet layout
+2. Parse basic cell formula operations
+3. Reference cells within the above formula
+4. Tab synchronisation
+5. Negative value flashing
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+After ~3 hours of going at the problem, I managed to check off the top 3 items
+in my priorities list - whilst also spending some time to devise a plan on tab
+synchronisation as well.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+I decided on these priorities as I felt getting the fundamentals of the
+spreadsheet working first was of much higher importance than the other items
+listed.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Tab synchronisation plan
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+My main idea was to use `BroadcastChannel` to communicate between tab
+instances.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+When the React app mounts, it sends out a message on the specific channel
+asking for the current state of the table. Any existing instances that are
+currently running would pick up the message and respond back with the current
+state. The fresh instance is then able to write those values to the grid.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+When a cell has been updated, since the Worker is able to access
+`BroadcastChannel` as well, it then sends out an "update" message with the
+relevant Cell coordinates and the latest values, where other instances are
+listening out for that message and can update accordingly.
+
+Of course, this is all rather high-level, and doesn't take into consideration
+two instances editing the same cell. I think that would require thinking and
+planning well beyond the scope of 3 hours to determine a reconciliation
+strategy.
+
+I think, for a simple project like this, `BroadcastChannel` is better suited
+than a `SharedWorker` primarily due to its simplicity to setup. On top of this,
+there is much better browser compatibility with Web Workers +
+`BroadcastChannel` compared to `SharedWorker`.
+
+## Package justifications
+
+On top of the required React & Typescript combination, I did lean on a few
+other packages to make development easier.
+
+### Math.js
+
+I realised fairly swiftly that I was spending a lot of time understanding and
+implementing AgGrid as well as Workers, so I didn't want to spend a lot of time
+writing a whole mathematical expression parser as well. I spent a little bit of
+time researching and came to the conclusion that Math.js solved the problems I
+needed it to solve, whilst still being aware of the security implications.
+
+### Immer
+
+I'm a big fan of using the `produce()` function exported by `immer` to update
+objects, especially nested objects, in an immutable manner. I find writing
+immutable-first code much easier to maintain (everything is `readonly` where
+possible), but in the situations where you do need to make in-line updates, I
+find `produce()` is certainly worth its weight.
+
+### Tiny Invariant
+
+By implicitly defining invariants in the code, I find readability is greatly
+improved - you no longer need to have non-null assertions in situations you
+_think_ you'll not be stung by `undefined` access. This rubber-stamps that line
+in the code making it very clear if something has gone wrong.
