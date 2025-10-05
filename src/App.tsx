@@ -62,7 +62,7 @@ const App = memo(function App() {
 
 		rowNode.updateData(
 			produce(rowNode.data, (draft) => {
-				draft[response.columnId] = response.result.toString();
+				draft[response.columnId] = response.result;
 			}),
 		);
 	}, []);

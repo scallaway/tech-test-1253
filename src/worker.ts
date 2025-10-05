@@ -14,7 +14,7 @@ export type WorkerRequest = {
 export type WorkerResponse = {
 	readonly columnId: number;
 	readonly rowIndex: number;
-	readonly result: number;
+	readonly result: string;
 };
 
 self.onmessage = ({ data }: MessageEvent<WorkerRequest>) => {
