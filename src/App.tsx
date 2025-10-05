@@ -6,10 +6,11 @@ import { AgGridReact } from "ag-grid-react";
 import {
 	AUTO_SIZE_STRATEGY,
 	COLUMNS,
+	DATA_TYPE_DEFINITIONS,
 	DEFAULT_COLUMN_DEF,
 	THEME,
-	type Row,
 } from "./gridOptions";
+import { type Row } from "./types";
 import { type CellEditRequestEvent, type IRowNode } from "ag-grid-community";
 import type { WorkerResponse } from "./worker";
 
@@ -17,7 +18,7 @@ const ROW_DATA = Array.from({ length: 10 }).map((_, rowIndex) =>
 	Object.fromEntries(
 		COLUMNS.map((column, columnIndex) => [
 			[column.field],
-			columnIndex === 0 ? rowIndex + 1 : null,
+			{ formula: "", result: columnIndex === 0 ? rowIndex + 1 : null },
 		]),
 	),
 );
@@ -28,18 +29,19 @@ const App = memo(function App() {
 
 	const handleCellEdit = useCallback(
 		(event: CellEditRequestEvent) => {
-			if (!event.newValue || !gridRef.current) {
+			if (!event.newValue.formula || !gridRef.current) {
 				return;
 			}
 
 			// TODO: Type these worker messages all the way through as there are no
 			// compile-time guarantees at the moment
 			worker.current?.postMessage({
-				formula: replaceCellValues(
-					event.newValue,
-					retrieveCellValues(event.newValue, gridRef.current),
+				formula: event.newValue.formula,
+				cellValueMapping: retrieveCellValues(
+					event.newValue.formula,
+					gridRef.current,
 				),
-				oldValue: event.oldValue,
+				oldValue: event.oldValue.result,
 				rowIndex: event.rowIndex,
 				columnId: event.column.getColId(),
 			});
@@ -62,7 +64,8 @@ const App = memo(function App() {
 
 		rowNode.updateData(
 			produce(rowNode.data, (draft) => {
-				draft[response.columnId] = response.result;
+				draft[response.columnId].result = response.result;
+				draft[response.columnId].formula = response.formula;
 			}),
 		);
 	}, []);
@@ -92,6 +95,7 @@ const App = memo(function App() {
 				theme={THEME}
 				gridOptions={{ readOnlyEdit: true }}
 				onCellEditRequest={handleCellEdit}
+				dataTypeDefinitions={DATA_TYPE_DEFINITIONS}
 			/>
 		</div>
 	);
@@ -100,26 +104,6 @@ const App = memo(function App() {
 export default App;
 
 const CELL_MATCH_REGEX = /([A-Za-z]+[0-9]+)/g;
-
-const replaceCellValues = (
-	formula: string,
-	cellsToValue: Map<string, number>,
-): string => {
-	// NOTE: This could be improved as we're matching on Regex twice
-	// The first time so we can isolate the cell values, the second time to
-	// ensure we only look in the Map if we need to
-	return formula
-		.split(CELL_MATCH_REGEX)
-		.filter(Boolean)
-		.map((value) => {
-			if (value.match(CELL_MATCH_REGEX)) {
-				return cellsToValue.get(value);
-			}
-
-			return value;
-		})
-		.join("");
-};
 
 /**
  * Returns a mapping of the cell references to the value of those cells
@@ -147,7 +131,7 @@ const retrieveCellValues = (
 				gridRef.api.getCellValue({
 					rowNode,
 					colKey: cell.slice(0, 1),
-				}) ?? 0,
+				}).result ?? 0,
 			];
 		}),
 	);
