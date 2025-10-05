@@ -1,12 +1,5 @@
 import invariant from "tiny-invariant";
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	type RefObject,
-} from "react";
+import { memo, useCallback, useEffect, useRef, type RefObject } from "react";
 import "./App.css";
 import { produce } from "immer";
 import { AgGridReact } from "ag-grid-react";
@@ -31,11 +24,7 @@ const ROW_DATA = Array.from({ length: 10 }).map((_, rowIndex) =>
 
 const App = memo(function App() {
 	const gridRef = useRef<AgGridReact | null>(null);
-	const worker = useMemo(
-		() =>
-			new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }),
-		[],
-	);
+	const worker = useRef<Worker | null>(null);
 
 	const handleCellEdit = useCallback(
 		(event: CellEditRequestEvent) => {
@@ -44,8 +33,8 @@ const App = memo(function App() {
 			}
 
 			// TODO: Type these worker messages all the way through as there are no
-			// compile-time guarantees atm
-			worker.postMessage({
+			// compile-time guarantees at the moment
+			worker.current?.postMessage({
 				formula: replaceCellValues(
 					event.newValue,
 					retrieveCellValues(event.newValue, gridRef.current),
@@ -79,8 +68,16 @@ const App = memo(function App() {
 	}, []);
 
 	useEffect(() => {
-		worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+		worker.current = new Worker(new URL("./worker.ts", import.meta.url), {
+			type: "module",
+		});
+
+		worker.current.onmessage = (e: MessageEvent<WorkerResponse>) => {
 			publishResultToCell(e.data);
+		};
+
+		return () => {
+			worker.current?.terminate();
 		};
 	}, [publishResultToCell, worker]);
 
