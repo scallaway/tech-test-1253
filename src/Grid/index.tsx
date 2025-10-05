@@ -9,7 +9,7 @@ import {
 import { type CellEditRequestEvent, type ColDef } from "ag-grid-community";
 import { retrieveCellValues } from "../utils";
 
-const ROW_DATA = Array.from({ length: 10 }).map((_, rowIndex) =>
+const ROW_DATA = Array.from({ length: 20 }).map((_, rowIndex) =>
 	Object.fromEntries(
 		COLUMNS.map((column, columnIndex) => [
 			[column.field],

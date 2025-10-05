@@ -1,12 +1,7 @@
-import {
-	themeQuartz,
-	type ColDef,
-	type NestedFieldPaths,
-} from "ag-grid-community";
+import { themeQuartz, type ColDef } from "ag-grid-community";
 import type { AgGridReact } from "ag-grid-react";
 import { type ComponentProps } from "react";
 import { CellEditor } from "./CellEditor";
-import type { Cell } from "../utils";
 
 export const DEFAULT_COLUMN_DEF = {
 	width: 100,
@@ -20,8 +15,10 @@ export const COLUMNS = [
 		headerName: "",
 		field: "rowIndex",
 		editable: false,
+		pinned: "left",
+		width: 50,
 	},
-	...Array.from({ length: 7 }).map((_, i) => ({
+	...Array.from({ length: 10 }).map((_, i) => ({
 		field: String.fromCharCode(65 + i).toLocaleUpperCase(),
 		cellEditor: CellEditor,
 		cellEditorParams: {

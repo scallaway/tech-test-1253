@@ -49,10 +49,24 @@ const App = memo(function App() {
 
 	return (
 		<div
-			style={{ height: 475, width: 700, overflow: "scroll" }}
-			data-ag-theme-mode="dark"
+			style={{
+				color: "#eee",
+
+				fontFamily: "sans-serif",
+			}}
 		>
-			<Grid gridRef={gridRef} worker={worker} />
+			<h1>Spreadsheet tech test</h1>
+			<h2>Built with React, Typescript & AgGrid</h2>
+			<div
+				style={{ height: 475, width: 800, overflow: "scroll" }}
+				data-ag-theme-mode="dark"
+			>
+				<Grid gridRef={gridRef} worker={worker} />
+			</div>
+			<p>
+				All cells (outside of the index and header cells) are editable allowing
+				for references to other cells as well (by typing, not clicking)
+			</p>
 		</div>
 	);
 });
