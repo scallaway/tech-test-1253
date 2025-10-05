@@ -5,17 +5,16 @@ import { CellEditor } from "./CellEditor";
 
 export const DEFAULT_COLUMN_DEF = {
 	width: 100,
-	resizable: false,
 	sortable: false,
 	editable: true,
+	resizable: false, // This and auto resizing aren't the most reliable it seems
 } satisfies ColDef;
 
 export const COLUMNS = [
 	{
 		headerName: "",
 		field: "rowIndex",
-		headerStyle: { width: 50 },
-		cellEditor: "agTextCellEditor",
+		editable: false,
 	},
 	...Array.from({ length: 7 }).map((_, i) => ({
 		field: String.fromCharCode(65 + i).toLocaleUpperCase(),
@@ -41,8 +40,3 @@ export const THEME = themeQuartz.withParams({
 	headerColumnBorder: { style: "solid" },
 	columnBorder: { style: "solid" },
 });
-
-export const AUTO_SIZE_STRATEGY = {
-	type: "fitCellContents",
-	skipHeader: true,
-} satisfies ComponentProps<typeof AgGridReact>["autoSizeStrategy"];

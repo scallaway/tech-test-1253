@@ -1,10 +1,8 @@
 import invariant from "tiny-invariant";
 import { memo, useCallback, useEffect, useRef, type RefObject } from "react";
-import "./App.css";
 import { produce } from "immer";
 import { AgGridReact } from "ag-grid-react";
 import {
-	AUTO_SIZE_STRATEGY,
 	COLUMNS,
 	DATA_TYPE_DEFINITIONS,
 	DEFAULT_COLUMN_DEF,
@@ -58,6 +56,8 @@ const App = memo(function App() {
 		const rowNode: IRowNode<Row> | undefined = gridRef.current.api.getRowNode(
 			response.rowIndex.toString(),
 		);
+
+		// TODO: This should _probably_ be an invariant instead
 		if (!rowNode || !rowNode.data) {
 			return;
 		}
@@ -91,7 +91,6 @@ const App = memo(function App() {
 				defaultColDef={DEFAULT_COLUMN_DEF}
 				rowData={ROW_DATA}
 				columnDefs={COLUMNS}
-				autoSizeStrategy={AUTO_SIZE_STRATEGY}
 				theme={THEME}
 				gridOptions={{ readOnlyEdit: true }}
 				onCellEditRequest={handleCellEdit}
