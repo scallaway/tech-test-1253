@@ -8,13 +8,14 @@ import {
 	THEME,
 	type Row,
 } from "./gridOptions";
-import type { CellEditingStoppedEvent, IRowNode } from "ag-grid-community";
+import { type CellEditRequestEvent, type IRowNode } from "ag-grid-community";
 import type { WorkerResponse } from "./worker";
 
 function App() {
 	const gridRef = useRef<AgGridReact | null>(null);
 	const worker = useMemo(
-		() => new Worker(new URL("./worker.ts", import.meta.url)),
+		() =>
+			new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }),
 		[],
 	);
 
@@ -30,14 +31,15 @@ function App() {
 	);
 
 	const handleCellEdit = useCallback(
-		(event: CellEditingStoppedEvent) => {
+		(event: CellEditRequestEvent) => {
 			if (!event.newValue) {
 				return;
 			}
+
 			// TODO: Type these worker messages all the way through as there are no
 			// compile-time guarantees atm
 			worker.postMessage({
-				text: event.newValue,
+				formula: event.newValue,
 				oldValue: event.oldValue,
 				rowIndex: event.rowIndex,
 				columnId: event.column.getColId(),
@@ -61,7 +63,7 @@ function App() {
 
 		rowNode.updateData(
 			produce(rowNode.data, (draft) => {
-				draft[response.columnId] = response.result;
+				draft[response.columnId] = response.result.toString();
 			}),
 		);
 	}, []);
@@ -81,7 +83,8 @@ function App() {
 				columnDefs={COLUMNS}
 				autoSizeStrategy={AUTO_SIZE_STRATEGY}
 				theme={THEME}
-				onCellEditingStopped={handleCellEdit}
+				gridOptions={{ readOnlyEdit: true }}
+				onCellEditRequest={handleCellEdit}
 			/>
 		</div>
 	);

@@ -1,14 +1,16 @@
+import { evaluate } from "mathjs";
+
 export type WorkerRequest = {
 	readonly columnId: number;
 	readonly rowIndex: number;
 	readonly oldValue: string;
-	readonly text: string;
+	readonly formula: string;
 };
 
 export type WorkerResponse = {
 	readonly columnId: number;
 	readonly rowIndex: number;
-	readonly result: string;
+	readonly result: number;
 };
 
 self.onmessage = ({ data }: MessageEvent<WorkerRequest>) => {
@@ -18,16 +20,14 @@ self.onmessage = ({ data }: MessageEvent<WorkerRequest>) => {
 	};
 
 	// All spreadsheet formulae should start with an "="
-	if (!data.text.startsWith("=")) {
+	if (!data.formula.startsWith("=")) {
 		self.postMessage({
 			...base,
 			result: data.oldValue,
 		});
 	}
 
-	const values = data.text.slice(1).split("+");
-
-	const result = values.reduce((acc, val) => acc + Number(val), 0);
+	const result = evaluate(data.formula.slice(1));
 
 	// TODO: Handle text values
 	self.postMessage({
